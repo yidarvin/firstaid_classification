@@ -70,6 +70,8 @@ def train_classifier(model, dataloaders, logger, num_gpus, cfg):
     logger.super_print('Time {}'.format(datetime.datetime.now()-time_of_start))
     logger.super_print('--------------------')
 
+    return model
+
 def test_classifier(model, dataloader, logger, num_gpus, cfg):
     time_of_start = datetime.datetime.now()
     criterion = build_loss(cfg)
@@ -79,17 +81,52 @@ def test_classifier(model, dataloader, logger, num_gpus, cfg):
             model = nn.DataPrallel(model)
     model.eval()
     logger.super_print('----------TESTING----------')
-    running_acc = [0.0 for ii in range(len(cfg.MODEL.CHANOUT))]
+    conf_matrix = [np.zeros((c,c)) for c in cfg.MODEL.CHANOUT]
     running_loss = 0.0
     for ii,sample_batch in enumerate(dataloader):
         X,Y = sample_batch['X'],sample_batch['Y']
         if num_gpus > 0:
             X,Y = X.cuda(), [y.cuda() for y in Y]
-        accs,loss = take_one_step(model, X, Y, criterion, phase='test')
-        running_acc = [r + acc.item() * X.size(0) for r,acc in zip(running_acc,accs)]
+        output = model(X)
+        loss = criterion(output, Y)
+        pred = [torch.argmax(out,dim=1).item() for out in output]
+        for jj,p in enumerate(pred):
+            conf_matrix[jj][Y[jj].item(), p] += 1
         running_loss += loss.item() * X.size(0)
-    epoch_acc = [r / len(dataloader.dataset) for r in running_acc]
+    epoch_acc = [(cm * np.eye(cm.shape[0])).sum() / cm.sum() for cm in conf_matrix]
     epoch_loss = running_loss / len(dataloader.dataset)
     logger.super_print('Loss: {:.4f} Acc: {}'.format(epoch_loss, '|'.join([str(e) for e in epoch_acc])))
+    for ii,acccm in enumerate(zip(epoch_acc,conf_matrix)):
+        acc,cm = acccm
+        logger.super_print('|-Class {}: Acc: {}'.format(ii,acc))
+        for jj in range(cm.shape[0]):
+            if jj == 0:
+                logger.super_print('  |-[[{}],'.format(' '.join([str(c) for c in cm[jj]])))
+            if jj == cm.shape[0]-1:
+                logger.super_print('  |- [{}]]'.format(' '.join([str(c) for c in cm[jj]])))
+            else:
+                logger.super_print('  |- [{}],'.format(' '.join([str(c) for c in cm[jj]])))
     logger.super_print('Time {}'.format(datetime.datetime.now()-time_of_start))
     logger.super_print('--------------------')
+
+    return epoch_acc
+
+def run_classifier(model, dataloader, logger, num_gpus, cfg):
+    time_of_start = datetime.datetime.now()
+    if num_gpus > 0:
+        model = model.cuda()
+        if num_gpus > 1:
+            model = nn.DataPrallel(model)
+    model.eval()
+    logger.super_print('----------INFERENCE----------')
+    for ii,sample_batch in enumerate(dataloader):
+        X,path_file = sample_batch['X'],sample_batch['path']
+        if num_gpus > 0:
+            X = X.cuda()
+        output = model(X)
+        pred = [torch.argmax(out,dim=1).item() for out in output]
+        logger.super_print('|-{} {}'.format(path_file[0], '|'.join([str(p) for p in pred])))
+    logger.super_print('Time {}'.format(datetime.datetime.now()-time_of_start))
+    logger.super_print('--------------------')
+
+    return 0

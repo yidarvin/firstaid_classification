@@ -19,27 +19,27 @@ class SimpleClassificationDataset(Dataset):
         self.transform = transform
 
         self.path_imgs = []
-        if not self.inference:
-            self.labels = []
+        self.labels = []
         with open(self.path_csv) as csvfile:
             pathreader = csv.reader(csvfile, delimiter=",")
             for row in pathreader:
                 self.path_imgs.append(row[0])
                 if not self.inference:
                     self.labels.append([int(r) for r in row[1:]])
+                else:
+                    self.labels.append([0])
         if databloat:
             self.path_imgs, self.labels = extend_data(self.path_imgs, self.labels, databloat)
     def __len__(self):
         return len(self.path_imgs)
     def __getitem__(self, idx):
         img = io.imread(self.path_imgs[idx]).transpose([2,0,1])
-        if not self.inference:
-            lab = self.labels[idx]
+        lab = self.labels[idx]
         # Image Preprocessing
         img = rescale(img)
         if self.resize:
             img = resize(img, img.resize)
-        sample = {'X': img, 'Y': lab}
+        sample = {'X': img, 'Y': lab, 'path': self.path_imgs[idx]}
         if self.transform:
             sample = self.transform(sample)
         return sample

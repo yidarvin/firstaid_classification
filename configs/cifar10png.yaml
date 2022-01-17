@@ -17,4 +17,4 @@ DATA:
     PATH: "/home/bmcv/Data/cifar-10-pngs/testtable.csv"
 HP:
   BATCHSIZE: 256
-  NUMEPOCH: 2
+  NUMEPOCH: 10
