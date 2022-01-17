@@ -6,6 +6,7 @@ import argparse
 from classifier.config import get_cfg
 from classifier.nets import build_model
 from classifier.data import create_dataloaders
+from classifier.engine import create_logger,train_classifier
 
 def return_parser():
     parser = argparse.ArgumentParser(description = "Simple Classification.")
@@ -24,17 +25,14 @@ def setup(args):
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
     cfg.freeze()
-    #default_setup(cfg, args)
-    print(cfg)
-    return cfg
+    logger = create_logger(cfg)
+    return cfg,logger
 
 def main(args):
-    cfg = setup(args)
+    cfg,logger = setup(args)
     model = build_model(cfg)
     dataloaders = create_dataloaders(cfg)
-    for key in dataloaders:
-        print(key)
-        print(dataloaders[key])
+    train_classifier(model, dataloaders, logger, args.num_gpus, cfg)
 
 if __name__ == "__main__":
     args = return_parser().parse_args()

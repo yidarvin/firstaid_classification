@@ -11,7 +11,7 @@ from .build import ARCHITECTURE_REGISTRY
 @ARCHITECTURE_REGISTRY.register()
 class resnet18mtl(nn.Module):
     @configurable
-    def __init__(self, in_chan=3, out_chan=2, pretrained=True, downsample=0):
+    def __init__(self, in_chan=3, out_chan=[2], pretrained=True, downsample=0):
         super(resnet18mtl, self).__init__()
         if type(out_chan) is not list:
             out_chan = [out_chan]
@@ -19,9 +19,10 @@ class resnet18mtl(nn.Module):
         self.model = torchvision.models.resnet18(pretrained=pretrained)
         if in_chan != 3:
             self.model.conv1 = nn.Conv2d(in_chan, 64, kernel_size=7, stride=2, padding=3, bias=False)
-        self.model.outs = []
+        heads = []
         for out_c in out_chan:
-            self.model.outs.append(nn.Linear(512, out_c))
+            heads.append(nn.Linear(512, out_c))
+        self.model.outs = nn.ModuleList(heads)
 
         if downsample >= 1:
             self.model.conv1 = nn.Conv2d(in_chan, 64, kernel_size=7, stride=1, padding=3, bias=False)

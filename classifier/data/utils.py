@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 
 def rescale(img):
+    img = img.astype(np.float32)
     new_img = img - img.min()
     new_img /= (new_img.max() + 1e-6)
     return new_img

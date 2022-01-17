@@ -62,7 +62,7 @@ def create_dataloaders(cfg):
                                               inference=False,
                                               databloat=cfg.DATA.TRAIN.DATABLOAT,
                                               transform=transforms.Compose(augmentation))
-        loader_tr = DataLoader(data_tr, batch_size=cfg.HP.BATCHSIZE, shuffle=True, drop_last=True)
+        loader_tr = DataLoader(data_tr, batch_size=cfg.HP.BATCHSIZE, shuffle=True, drop_last=True, num_workers=cfg.INPUT.NUMWORKERS)
         dataloaders["train"] = loader_tr
     if cfg.DATA.VAL.PATH:
         data_va = SimpleClassificationDataset(cfg.DATA.VAL.PATH,
