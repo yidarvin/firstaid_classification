@@ -1,6 +1,6 @@
 
 from os.path import join
-import time
+import datetime
 
 import numpy as np
 import torch
@@ -15,7 +15,7 @@ def take_one_step(model, X, Y, criterion, phase="val", alpha=1):
     return accs,loss
 
 def train_classifier(model, dataloaders, logger, num_gpus, cfg):
-    time_of_start = time.time()
+    time_of_start = datetime.datetime.now()
     criterion = build_loss(cfg)
     if num_gpus > 0:
         model = model.cuda()
@@ -24,10 +24,10 @@ def train_classifier(model, dataloaders, logger, num_gpus, cfg):
     optimizer = build_opt(model, cfg)
     num_epochs = cfg.HP.NUMEPOCH
 
+    logger.super_print('----------TRAINING----------')
     best_acc = 0.0
     for epoch in range(num_epochs):
-        if logger:
-            statement = logger.super_print('Epoch {}/{}'.format(epoch, num_epochs - 1))
+        logger.super_print('Epoch {}/{}:'.format(epoch, num_epochs - 1))
         for phase in dataloaders.keys():
             if phase == "train":
                 model.train()
@@ -52,7 +52,7 @@ def train_classifier(model, dataloaders, logger, num_gpus, cfg):
                 running_loss += loss.item() * X.size(0)
             epoch_acc = [r / len(dataloaders[phase].dataset) for r in running_acc]
             epoch_loss = running_loss / len(dataloaders[phase].dataset)
-            logger.super_print('{} Loss: {:.4f} Acc: {}'.format(phase, epoch_loss, '|'.join([str(e) for e in epoch_acc])))
+            logger.super_print('|-{} Loss: {:.4f} Acc: {}'.format(phase, epoch_loss, '|'.join([str(e) for e in epoch_acc])))
             if phase == 'val':
                 if np.mean(epoch_acc) >= best_acc:
                     best_acc = np.mean(epoch_acc)
@@ -61,3 +61,35 @@ def train_classifier(model, dataloaders, logger, num_gpus, cfg):
                             torch.save(model.module.state_dict(), join(cfg.MODEL.MODELPATH, cfg.NAME + '_best.pth'))
                         else:
                             torch.save(model.state_dict(), join(cfg.MODEL.MODELPATH, cfg.NAME + '_best.pth'))
+        logger.super_print('|-Time {}'.format(datetime.datetime.now()-time_of_start))
+    if cfg.MODEL.MODELPATH:
+        if num_gpus > 1:
+            torch.save(model.module.state_dict(), join(cfg.MODEL.MODELPATH, cfg.NAME + '_last.pth'))
+        else:
+            torch.save(model.state_dict(), join(cfg.MODEL.MODELPATH, cfg.NAME + '_last.pth'))
+    logger.super_print('Time {}'.format(datetime.datetime.now()-time_of_start))
+    logger.super_print('--------------------')
+
+def test_classifier(model, dataloader, logger, num_gpus, cfg):
+    time_of_start = datetime.datetime.now()
+    criterion = build_loss(cfg)
+    if num_gpus > 0:
+        model = model.cuda()
+        if num_gpus > 1:
+            model = nn.DataPrallel(model)
+    model.eval()
+    logger.super_print('----------TESTING----------')
+    running_acc = [0.0 for ii in range(len(cfg.MODEL.CHANOUT))]
+    running_loss = 0.0
+    for ii,sample_batch in enumerate(dataloader):
+        X,Y = sample_batch['X'],sample_batch['Y']
+        if num_gpus > 0:
+            X,Y = X.cuda(), [y.cuda() for y in Y]
+        accs,loss = take_one_step(model, X, Y, criterion, phase='test')
+        running_acc = [r + acc.item() * X.size(0) for r,acc in zip(running_acc,accs)]
+        running_loss += loss.item() * X.size(0)
+    epoch_acc = [r / len(dataloader.dataset) for r in running_acc]
+    epoch_loss = running_loss / len(dataloader.dataset)
+    logger.super_print('Loss: {:.4f} Acc: {}'.format(epoch_loss, '|'.join([str(e) for e in epoch_acc])))
+    logger.super_print('Time {}'.format(datetime.datetime.now()-time_of_start))
+    logger.super_print('--------------------')
