@@ -1,0 +1,11 @@
+MODEL:
+  ARCHITECTURE: "resnet18mtl"
+DATA:
+  TRAIN:
+    PATH: "/home/bmcv/Data/cifar-10-pngs/traintable.csv"
+  VAL:
+    PATH: "/home/bmcv/Data/cifar-10-pngs/testtable.csv"
+  TEST:
+    PATH: "/home/bmcv/Data/cifar-10-pngs/testtable.csv"
+  INFERENCE:
+    PATH: "/home/bmcv/Data/cifar-10-pngs/testtable.csv"

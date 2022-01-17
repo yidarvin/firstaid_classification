@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  firstaid_classification:
+    build: .
+    volumes:
+      - /home/darvin/Projects/firstaid_classification/:/home/bmcv/firstaid_classification
+      - /home/darvin/Data/:/home/bmcv/Data
+      - /tmp/.X11-unix/X0:/tmp/.X11-unix/X0
+    network_mode: host
+    environment:
+      - DISPLAY=${DISPLAY}
+    stdin_open: true
+    tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: 'nvidia'
+              count: all
+              capabilities: [gpu]
