@@ -33,9 +33,12 @@ def main(args):
     model = build_model(cfg)
     dataloaders = create_dataloaders(cfg)
     logger.super_print(cfg.dump())
-    model = train_classifier(model, dataloaders, logger, args.num_gpus, cfg)
-    acc = test_classifier(model, dataloaders['test'], logger, args.num_gpus, cfg)
-    #run_classifier(model, dataloaders['inference'], logger, args.num_gpus, cfg)
+    if cfg.DATA.TRAIN.PATH:
+        model = train_classifier(model, dataloaders, logger, args.num_gpus, cfg)
+    if cfg.DATA.TEST.PATH:
+        acc = test_classifier(model, dataloaders['test'], logger, args.num_gpus, cfg)
+    if cfg.DATA.INFERENCE.PATH:
+        run_classifier(model, dataloaders['inference'], logger, args.num_gpus, cfg)
 
 if __name__ == "__main__":
     args = return_parser().parse_args()

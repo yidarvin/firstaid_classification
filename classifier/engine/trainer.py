@@ -56,17 +56,17 @@ def train_classifier(model, dataloaders, logger, num_gpus, cfg):
             if phase == 'val':
                 if np.mean(epoch_acc) >= best_acc:
                     best_acc = np.mean(epoch_acc)
-                    if cfg.MODEL.MODELPATH:
+                    if cfg.SAVE.MODELPATH:
                         if num_gpus > 1:
-                            torch.save(model.module.state_dict(), join(cfg.MODEL.MODELPATH, cfg.NAME + '_best.pth'))
+                            torch.save(model.module.state_dict(), join(cfg.SAVE.MODELPATH, cfg.NAME + '_best.pth'))
                         else:
-                            torch.save(model.state_dict(), join(cfg.MODEL.MODELPATH, cfg.NAME + '_best.pth'))
+                            torch.save(model.state_dict(), join(cfg.SAVE.MODELPATH, cfg.NAME + '_best.pth'))
         logger.super_print('|-Time {}'.format(datetime.datetime.now()-time_of_start))
-    if cfg.MODEL.MODELPATH:
+    if cfg.SAVE.MODELPATH:
         if num_gpus > 1:
-            torch.save(model.module.state_dict(), join(cfg.MODEL.MODELPATH, cfg.NAME + '_last.pth'))
+            torch.save(model.module.state_dict(), join(cfg.SAVE.MODELPATH, cfg.NAME + '_last.pth'))
         else:
-            torch.save(model.state_dict(), join(cfg.MODEL.MODELPATH, cfg.NAME + '_last.pth'))
+            torch.save(model.state_dict(), join(cfg.SAVE.MODELPATH, cfg.NAME + '_last.pth'))
     logger.super_print('Time {}'.format(datetime.datetime.now()-time_of_start))
     logger.super_print('--------------------')
 
@@ -102,7 +102,7 @@ def test_classifier(model, dataloader, logger, num_gpus, cfg):
         for jj in range(cm.shape[0]):
             if jj == 0:
                 logger.super_print('  |-[[{}],'.format(' '.join([str(c) for c in cm[jj]])))
-            if jj == cm.shape[0]-1:
+            elif jj == cm.shape[0]-1:
                 logger.super_print('  |- [{}]]'.format(' '.join([str(c) for c in cm[jj]])))
             else:
                 logger.super_print('  |- [{}],'.format(' '.join([str(c) for c in cm[jj]])))

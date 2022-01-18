@@ -8,6 +8,6 @@ ARCHITECTURE_REGISTRY = Registry("ARCHITECTURE")
 def build_model(cfg):
     arch = cfg.MODEL.ARCHITECTURE
     model = ARCHITECTURE_REGISTRY.get(arch)(cfg)
-    if cfg.MODEL.MODELPATH and cfg.MODEL.LOADPREV:
-        model.load_state_dict(torch.load(cfg.MODEL.MODELPATH, cfg.NAME + '_best.pth'))
+    if cfg.SAVE.MODELPATH and cfg.MODEL.LOADPREV:
+        model.load_state_dict(torch.load(cfg.SAVE.MODELPATH, cfg.NAME + '_best.pth'))
     return model

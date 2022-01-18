@@ -5,7 +5,7 @@ MODEL:
   DOWNSAMPLE: 0
 DATA:
   TRAIN:
-    PATH: "/home/bmcv/Data/cifar-10-pngs/testtable.csv"
+    PATH: "/home/bmcv/Data/cifar-10-pngs/traintable.csv"
     FLIP: True
     ROTATE: False
     SHIFT: 4
@@ -14,7 +14,7 @@ DATA:
   TEST:
     PATH: "/home/bmcv/Data/cifar-10-pngs/testtable.csv"
   INFERENCE:
-    PATH: "/home/bmcv/Data/cifar-10-pngs/testtable.csv"
+    PATH: ""
 HP:
-  BATCHSIZE: 256
+  BATCHSIZE: 8
   NUMEPOCH: 10
