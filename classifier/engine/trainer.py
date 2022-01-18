@@ -1,13 +1,48 @@
 
-from os.path import join
+from pytorch_grad_cam.activations_and_gradients import ActivationsAndGradients
+from pytorch_grad_cam import GradCAM
+from pytorch_grad_cam.utils.image import scale_cam_image
+from pytorch_grad_cam.utils.svd_on_activations import get_2d_projection
+
+from os.path import join,isfile
 import datetime
+import h5py
 
 import numpy as np
 import torch
 
 from .build import build_loss, build_opt
+from .utils import ClassifierOutputTarget_modified
 
-def take_one_step(model, X, Y, criterion, phase="val", alpha=1):
+
+def save_vis(model, X, path_vis, title):
+    aag = ActivationsAndGradients(model, [model.return_vis_layer()], None)
+    out = aag(X)
+    for ii,out_c in enumerate(model.out_chan):
+        save_array = np.zeros((out_c, X.shape[2], X.shape[3]))
+        for jj in range(out_c):
+            model.zero_grad()
+            loss = sum(out[ii][:,jj])
+            loss.backward(retain_graph=True)
+
+            activations_list = [a.cpu().data.numpy() for a in aag.activations]
+            grads_list = [g.cpu().data.numpy() for g in aag.gradients]
+
+            target_size = (X.shape[2],X.shape[3])
+            target_layer = model.return_vis_layer()
+            layer_activations = activations_list[0]
+            layer_grads = grads_list[0]
+
+            weights = np.mean(layer_grads, axis=(2,3))
+            weighted_activations = weights[:,:,None,None]*layer_activations
+            cam = get_2d_projection(weighted_activations)
+            cam = np.maximum(cam, 0)
+            save_array[jj,:,:] = scaled = scale_cam_image(cam, target_size)[0]
+        with h5py.File(path_vis, 'a') as hf:
+            hf.create_dataset(title + '|task{}'.format(ii), data=save_array)
+    return 0
+
+def take_one_step(model, X, Y, criterion, phase="val"):
     with torch.set_grad_enabled(phase == "train"):
         output = model(X)
         loss = criterion(output, Y)
@@ -48,6 +83,8 @@ def train_classifier(model, dataloaders, logger, num_gpus, cfg):
                     loss.backward()
                     optimizer.step()
                     optimizer.zero_grad()
+                if phase == "val" and cfg.SAVE.VISPATH:
+                    save_vis(model, X, join(cfg.SAVE.VISPATH, cfg.NAME + '.h5'), sample_batch['path'][0].replace('/','|') + '|epoch{}'.format(epoch))
                 running_acc = [r + acc.item() * X.size(0) for r,acc in zip(running_acc,accs)]
                 running_loss += loss.item() * X.size(0)
             epoch_acc = [r / len(dataloaders[phase].dataset) for r in running_acc]
@@ -93,6 +130,8 @@ def test_classifier(model, dataloader, logger, num_gpus, cfg):
         for jj,p in enumerate(pred):
             conf_matrix[jj][Y[jj].item(), p] += 1
         running_loss += loss.item() * X.size(0)
+        if cfg.SAVE.VISPATH:
+            save_vis(model, X, join(cfg.SAVE.VISPATH, cfg.NAME + '.h5'), sample_batch['path'][0].replace('/','|') + '|TEST')
     epoch_acc = [(cm * np.eye(cm.shape[0])).sum() / cm.sum() for cm in conf_matrix]
     epoch_loss = running_loss / len(dataloader.dataset)
     logger.super_print('Loss: {:.4f} Acc: {}'.format(epoch_loss, '|'.join([str(e) for e in epoch_acc])))
@@ -126,6 +165,8 @@ def run_classifier(model, dataloader, logger, num_gpus, cfg):
         output = model(X)
         pred = [torch.argmax(out,dim=1).item() for out in output]
         logger.super_print('|-{} {}'.format(path_file[0], '|'.join([str(p) for p in pred])))
+        if cfg.SAVE.VISPATH:
+            save_vis(model, X, join(cfg.SAVE.VISPATH, cfg.NAME + '.h5'), sample_batch['path'][0].replace('/','|') + '|INFERENCE')
     logger.super_print('Time {}'.format(datetime.datetime.now()-time_of_start))
     logger.super_print('--------------------')
 

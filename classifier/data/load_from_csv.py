@@ -69,7 +69,7 @@ def create_dataloaders(cfg):
                                               resize=cfg.INPUT.RESIZE,
                                               inference=False,
                                               transform=transforms.Compose([ToTensor()]))
-        loader_va = DataLoader(data_va, batch_size=cfg.HP.BATCHSIZE, shuffle=False, drop_last=False)
+        loader_va = DataLoader(data_va, batch_size=1, shuffle=False, drop_last=False)
         dataloaders["val"] = loader_va
     if cfg.DATA.TEST.PATH:
         data_te = SimpleClassificationDataset(cfg.DATA.TEST.PATH,

@@ -45,6 +45,9 @@ class densenet121mtl(nn.Module):
             "downsample": cfg.MODEL.DOWNSAMPLE,
         }
 
+    def return_vis_layer(self):
+        return self.model.features[-1]
+
     def forward(self, x):
         x = self.model.features(x)
         x = F.relu(x, inplace=True)
@@ -92,6 +95,9 @@ class densenet169mtl(nn.Module):
             "downsample": cfg.MODEL.DOWNSAMPLE,
         }
 
+    def return_vis_layer(self):
+        return self.model.features[-1]
+
     def forward(self, x):
         x = self.model.features(x)
         x = F.relu(x, inplace=True)
@@ -138,6 +144,9 @@ class densenet201mtl(nn.Module):
             "pretrained": cfg.MODEL.PRETRAINED,
             "downsample": cfg.MODEL.DOWNSAMPLE,
         }
+
+    def return_vis_layer(self):
+        return self.model.features[-1]
 
     def forward(self, x):
         x = self.model.features(x)

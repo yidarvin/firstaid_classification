@@ -2,7 +2,7 @@ NAME: "cifar-10"
 MODEL:
   ARCHITECTURE: "resnet18mtl"
   CHANOUT: [10]
-  DOWNSAMPLE: 0
+  DOWNSAMPLE: 2
 DATA:
   TRAIN:
     PATH: "/home/bmcv/Data/cifar-10-pngs/traintable.csv"
@@ -16,5 +16,5 @@ DATA:
   INFERENCE:
     PATH: ""
 HP:
-  BATCHSIZE: 8
+  BATCHSIZE: 256
   NUMEPOCH: 10

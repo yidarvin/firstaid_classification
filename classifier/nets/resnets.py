@@ -15,6 +15,10 @@ class resnet18mtl(nn.Module):
         super(resnet18mtl, self).__init__()
         if type(out_chan) is not list:
             out_chan = [out_chan]
+        self.in_chan = in_chan
+        self.out_chan = out_chan
+        self.pretrained = pretrained
+        self.downsample = downsample
 
         self.model = torchvision.models.resnet18(pretrained=pretrained)
         if in_chan != 3:
@@ -46,6 +50,9 @@ class resnet18mtl(nn.Module):
             "pretrained": cfg.MODEL.PRETRAINED,
             "downsample": cfg.MODEL.DOWNSAMPLE,
         }
+
+    def return_vis_layer(self):
+        return self.model.layer4[-1]
 
     def forward(self, x):
         x = self.model.conv1(x)
@@ -105,6 +112,9 @@ class resnet34mtl(nn.Module):
             "downsample": cfg.MODEL.DOWNSAMPLE,
         }
 
+    def return_vis_layer(self):
+        return self.model.layer4[-1]
+
     def forward(self, x):
         x = self.model.conv1(x)
         x = self.model.bn1(x)
@@ -162,6 +172,9 @@ class resnet50mtl(nn.Module):
             "pretrained": cfg.MODEL.PRETRAINED,
             "downsample": cfg.MODEL.DOWNSAMPLE,
         }
+
+    def return_vis_layer(self):
+        return self.model.layer4[-1]
 
     def forward(self, x):
         x = self.model.conv1(x)
@@ -221,6 +234,9 @@ class resnet101mtl(nn.Module):
             "downsample": cfg.MODEL.DOWNSAMPLE,
         }
 
+    def return_vis_layer(self):
+        return self.model.layer4[-1]
+
     def forward(self, x):
         x = self.model.conv1(x)
         x = self.model.bn1(x)
@@ -278,6 +294,9 @@ class resnet152mtl(nn.Module):
             "pretrained": cfg.MODEL.PRETRAINED,
             "downsample": cfg.MODEL.DOWNSAMPLE,
         }
+
+    def return_vis_layer(self):
+        return self.model.layer4[-1]
 
     def forward(self, x):
         x = self.model.conv1(x)

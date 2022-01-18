@@ -1,5 +1,6 @@
 
 import torch
+from os.path import join
 
 from fvcore.common.registry import Registry
 
@@ -9,5 +10,5 @@ def build_model(cfg):
     arch = cfg.MODEL.ARCHITECTURE
     model = ARCHITECTURE_REGISTRY.get(arch)(cfg)
     if cfg.SAVE.MODELPATH and cfg.MODEL.LOADPREV:
-        model.load_state_dict(torch.load(cfg.SAVE.MODELPATH, cfg.NAME + '_best.pth'))
+        model.load_state_dict(torch.load(join(cfg.SAVE.MODELPATH, cfg.NAME + '_best.pth')))
     return model

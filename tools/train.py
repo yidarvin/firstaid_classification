@@ -2,6 +2,8 @@ from __future__ import print_function
 from __future__ import division
 
 import argparse
+from os import remove
+from os.path import join,isfile
 
 from classifier.config import get_cfg
 from classifier.nets import build_model
@@ -33,6 +35,8 @@ def main(args):
     model = build_model(cfg)
     dataloaders = create_dataloaders(cfg)
     logger.super_print(cfg.dump())
+    if cfg.SAVE.VISPATH and isfile(join(cfg.SAVE.VISPATH, cfg.NAME + '.h5')):
+        remove(join(cfg.SAVE.VISPATH, cfg.NAME + '.h5'))
     if cfg.DATA.TRAIN.PATH:
         model = train_classifier(model, dataloaders, logger, args.num_gpus, cfg)
     if cfg.DATA.TEST.PATH:

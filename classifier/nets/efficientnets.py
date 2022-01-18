@@ -45,6 +45,9 @@ class efficientnetb7mtl(nn.Module):
             "downsample": cfg.MODEL.DOWNSAMPLE,
         }
 
+    def return_vis_layer(self):
+        return self.model.features[-1]
+
     def forward(self, x):
         x = self.model.features(x)
         x = self.model.avgpool(x)
