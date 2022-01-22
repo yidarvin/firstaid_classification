@@ -8,7 +8,7 @@ def rescale(img):
     new_img /= (new_img.max() + 1e-6)
     return new_img
 
-def resize(img, resize=None):
+def img_resize(img, resize=None):
     img = img.astype(np.float32)
     img = rescale(img)
     if resize is None or (resize == img.shape[1] and resize == img.shape[2]):

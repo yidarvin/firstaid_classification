@@ -38,7 +38,7 @@ class SimpleClassificationDataset(Dataset):
         # Image Preprocessing
         img = rescale(img)
         if self.resize:
-            img = resize(img, img.resize)
+            img = img_resize(img, self.resize)
         sample = {'X': img, 'Y': lab, 'path': self.path_imgs[idx]}
         if self.transform:
             sample = self.transform(sample)

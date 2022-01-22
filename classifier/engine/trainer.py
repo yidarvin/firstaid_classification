@@ -10,6 +10,7 @@ import h5py
 
 import numpy as np
 import torch
+import torch.nn as nn
 
 from .build import build_loss, build_opt
 from .utils import ClassifierOutputTarget_modified
@@ -55,7 +56,7 @@ def train_classifier(model, dataloaders, logger, num_gpus, cfg):
     if num_gpus > 0:
         model = model.cuda()
         if num_gpus > 1:
-            model = nn.DataPrallel(model)
+            model = nn.DataParallel(model)
     optimizer = build_opt(model, cfg)
     num_epochs = cfg.HP.NUMEPOCH
 
